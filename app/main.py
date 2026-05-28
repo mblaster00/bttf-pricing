@@ -2,6 +2,8 @@ import logging
 import uuid
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.models import CartInput, PriceDetail, PriceResult
 from app.pricing import calculate_price
@@ -23,6 +25,14 @@ Calcule le prix d'un panier de DVDs Back to the Future.
     """,
     version="0.1.0",
 )
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+
+@app.get("/")
+def index() -> FileResponse:
+    """Sert l'interface web."""
+    return FileResponse("app/static/index.html")
 
 
 @app.get("/health")
