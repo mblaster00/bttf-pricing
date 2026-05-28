@@ -32,6 +32,24 @@ make run
 make test
 ```
 
+## Docker
+
+```bash
+# Build
+make docker-build
+
+# Run
+make docker-run
+```
+
+API available at http://localhost:8000
+
+## Web Interface
+
+Open http://localhost:8000 in your browser.
+
+Enter film names (one per line) and click Calculate.
+
 ## Lint
 
 ```bash
@@ -92,16 +110,18 @@ Film names are case-sensitive.
 bttf-pricing/
 ├── .github/
 │   ├── workflows/
-│   │   └── ci.yml
-│   └── pull_request_template.md
+│   │   └── ci.yml                   # CI — pytest + ruff on every PR
+│   └── pull_request_template.md     # PR checklist
 ├── app/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── models.py
-│   └── pricing.py
+│   ├── static/
+│   │   └── index.html               # Web interface (+/- cart)
+│   ├── main.py                      # FastAPI — routes + static files
+│   ├── models.py                    # Pydantic — CartInput, PriceResult
+│   └── pricing.py                   # Business logic — pure function
 ├── tests/
-│   ├── __init__.py
-│   └── test_pricing.py
-├── Makefile
-└── pyproject.toml
+│   └── test_pricing.py              # 9 tests — spec examples + edge cases
+├── Dockerfile                       # Production image — python:3.12-slim
+├── .dockerignore
+├── Makefile                         # install, run, test, lint, docker-*
+└── pyproject.toml                   # dependencies + build config
 ```
