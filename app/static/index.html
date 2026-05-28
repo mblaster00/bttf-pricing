@@ -26,32 +26,54 @@
       font-size: 0.9rem;
       margin-bottom: 2rem;
     }
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: #aaa;
-      margin-bottom: 0.5rem;
-    }
-    textarea {
-      width: 100%;
-      height: 140px;
+
+    /* ── Cart rows ── */
+    .cart {
       background: #1a1a1a;
       border: 1px solid #333;
-      border-radius: 6px;
-      color: #f0f0f0;
-      font-size: 0.95rem;
-      padding: 0.75rem;
-      resize: vertical;
-      outline: none;
-    }
-    textarea:focus { border-color: #555; }
-    .hint {
-      font-size: 0.78rem;
-      color: #666;
-      margin-top: 0.4rem;
+      border-radius: 8px;
+      overflow: hidden;
       margin-bottom: 1.25rem;
     }
-    button {
+    .cart-row {
+      display: flex;
+      align-items: center;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid #242424;
+    }
+    .cart-row:last-child { border-bottom: none; }
+    .film-info { flex: 1; }
+    .film-name { font-size: 0.95rem; font-weight: 500; }
+    .film-price { font-size: 0.78rem; color: #666; margin-top: 0.1rem; }
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      background: #2a2a2a;
+      color: #f0f0f0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .qty-btn:hover { background: #383838; }
+    .qty-btn:disabled { color: #444; border-color: #2a2a2a; cursor: not-allowed; background: #1a1a1a; }
+    .qty-value {
+      min-width: 1.6rem;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    /* ── Calculate button ── */
+    .calc-btn {
       width: 100%;
       padding: 0.75rem;
       background: #f5c518;
@@ -62,9 +84,10 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    button:hover { background: #e0b010; }
-    button:disabled { background: #555; color: #999; cursor: not-allowed; }
+    .calc-btn:hover { background: #e0b010; }
+    .calc-btn:disabled { background: #555; color: #999; cursor: not-allowed; }
 
+    /* ── Result ── */
     #result { margin-top: 2rem; }
     .total-box {
       background: #1a1a1a;
@@ -107,23 +130,60 @@
     <h1>BTTF Pricing</h1>
     <p class="subtitle">Back to the Future DVD bundle calculator</p>
 
-    <label for="films">Films (one per line)</label>
-    <textarea
-      id="films"
-      placeholder="Back to the Future 1&#10;Back to the Future 2&#10;Back to the Future 3"
-    ></textarea>
-    <p class="hint">Film names are case-sensitive. BTTF DVDs: 15€ each. Others: 20€ each.</p>
+    <div class="cart" id="cart"></div>
 
-    <button id="btn" onclick="calculate()">Calculate</button>
+    <button class="calc-btn" id="btn" onclick="calculate()">Calculate</button>
 
     <div id="error"></div>
     <div id="result" style="display:none"></div>
   </div>
 
   <script>
+    const CATALOG = [
+      { name: "Back to the Future 1", price: "15€" },
+      { name: "Back to the Future 2", price: "15€" },
+      { name: "Back to the Future 3", price: "15€" },
+      { name: "Other film",           price: "20€" },
+    ];
+
+    const quantities = Object.fromEntries(CATALOG.map(f => [f.name, 0]));
+
+    function renderCart() {
+      const cart = document.getElementById("cart");
+      cart.innerHTML = CATALOG.map(film => `
+        <div class="cart-row">
+          <div class="film-info">
+            <div class="film-name">${film.name}</div>
+            <div class="film-price">${film.price} each</div>
+          </div>
+          <div class="qty-control">
+            <button
+              class="qty-btn"
+              onclick="adjust('${film.name}', -1)"
+              ${quantities[film.name] === 0 ? "disabled" : ""}
+            >−</button>
+            <span class="qty-value">${quantities[film.name]}</span>
+            <button
+              class="qty-btn"
+              onclick="adjust('${film.name}', +1)"
+            >+</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function adjust(name, delta) {
+      quantities[name] = Math.max(0, quantities[name] + delta);
+      renderCart();
+    }
+
     async function calculate() {
-      const raw = document.getElementById("films").value;
-      const films = raw.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+      const films = [];
+      for (const film of CATALOG) {
+        for (let i = 0; i < quantities[film.name]; i++) {
+          films.push(film.name);
+        }
+      }
 
       const btn = document.getElementById("btn");
       const errorEl = document.getElementById("error");
@@ -164,9 +224,9 @@
               <div class="key">Different volumes</div>
               <div class="val">${d.bttf_different}</div>
             </div>
-            <div class="detail-item ${discountPct > 0 ? 'discount-highlight' : ''}">
+            <div class="detail-item ${discountPct > 0 ? "discount-highlight" : ""}">
               <div class="key">Discount</div>
-              <div class="val">${discountPct > 0 ? '-' : ''}${discountPct}%</div>
+              <div class="val">${discountPct > 0 ? "-" : ""}${discountPct}%</div>
             </div>
             <div class="detail-item">
               <div class="key">Other films</div>
@@ -183,6 +243,8 @@
         btn.textContent = "Calculate";
       }
     }
+
+    renderCart();
   </script>
 </body>
 </html>
